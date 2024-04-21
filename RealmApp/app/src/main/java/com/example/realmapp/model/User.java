@@ -1,3 +1,8 @@
+/*
+ * User.java
+ * This class represents a user and extends RealmObject for Realm database functionality.
+ */
+
 package com.example.realmapp.model;
 
 import io.realm.RealmList;

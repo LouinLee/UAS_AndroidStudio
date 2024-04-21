@@ -1,10 +1,15 @@
+/*
+ * HomeFragment.java
+ * This fragment displays featured gym classes and trainers on the home screen.
+ * It also provides navigation to the full list of classes and trainers.
+ */
+
 package com.example.realmapp.fragment;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -20,25 +25,27 @@ import com.example.realmapp.model.GymClass;
 import com.example.realmapp.model.Trainer;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-import io.realm.Realm;
-import io.realm.RealmChangeListener;
-import io.realm.RealmResults;
-
-import java.util.ArrayList;
 import java.util.List;
+
+import io.realm.Realm;
+import io.realm.RealmResults;
 
 public class HomeFragment extends Fragment {
 
+    // Realm instance
     private Realm realm;
-    private ClassAdapter classAdapter;
-    private TrainerAdapter trainerAdapter;
+
+    // RecyclerViews and adapters for featured classes and trainers
     private RecyclerView classRecyclerView;
     private RecyclerView trainerRecyclerView;
+    private ClassAdapter classAdapter;
+    private TrainerAdapter trainerAdapter;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
+        // Initialize Realm
         realm = Realm.getDefaultInstance();
 
         // Setup featured classes
@@ -48,6 +55,8 @@ public class HomeFragment extends Fragment {
         // Setup featured trainers
         trainerRecyclerView = view.findViewById(R.id.featuredTrainersRecyclerView);
         trainerRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        // Load featured classes and trainers
         setupFeaturedClasses();
         setupFeaturedTrainers();
 
@@ -62,40 +71,35 @@ public class HomeFragment extends Fragment {
         return view;
     }
 
+    // Method to setup featured classes
     private void setupFeaturedClasses() {
         RealmResults<GymClass> classes = realm.where(GymClass.class).findAllAsync();
-        classes.addChangeListener(new RealmChangeListener<RealmResults<GymClass>>() {
-            @Override
-            public void onChange(RealmResults<GymClass> results) {
-                // Ensure the operation is safe
-                if (!results.isEmpty()) {
-                    List<GymClass> stableList = realm.copyFromRealm(results);
-                    int size = Math.min(3, stableList.size());
-                    List<GymClass> subList = stableList.subList(0, size);
-                    classAdapter = new ClassAdapter(subList, HomeFragment.this::onClassClicked);
-                    classRecyclerView.setAdapter(classAdapter);
-                }
+        classes.addChangeListener(results -> {
+            if (!results.isEmpty()) {
+                List<GymClass> stableList = realm.copyFromRealm(results);
+                int size = Math.min(3, stableList.size());
+                List<GymClass> subList = stableList.subList(0, size);
+                classAdapter = new ClassAdapter(subList, HomeFragment.this::onClassClicked);
+                classRecyclerView.setAdapter(classAdapter);
             }
         });
     }
 
+    // Method to setup featured trainers
     private void setupFeaturedTrainers() {
         RealmResults<Trainer> trainers = realm.where(Trainer.class).findAllAsync();
-        trainers.addChangeListener(new RealmChangeListener<RealmResults<Trainer>>() {
-            @Override
-            public void onChange(RealmResults<Trainer> results) {
-                if (!results.isEmpty()) {
-                    List<Trainer> stableList = realm.copyFromRealm(results);
-                    int size = Math.min(3, stableList.size());
-                    List<Trainer> subList = stableList.subList(0, size);
-                    trainerAdapter = new TrainerAdapter(subList, HomeFragment.this::onTrainerClicked);
-                    trainerRecyclerView.setAdapter(trainerAdapter);
-                }
+        trainers.addChangeListener(results -> {
+            if (!results.isEmpty()) {
+                List<Trainer> stableList = realm.copyFromRealm(results);
+                int size = Math.min(3, stableList.size());
+                List<Trainer> subList = stableList.subList(0, size);
+                trainerAdapter = new TrainerAdapter(subList, HomeFragment.this::onTrainerClicked);
+                trainerRecyclerView.setAdapter(trainerAdapter);
             }
         });
     }
 
-
+    // Method to handle click on a gym class item
     private void onClassClicked(GymClass gymClass) {
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         ClassDetailFragment detailFragment = new ClassDetailFragment();
@@ -108,6 +112,7 @@ public class HomeFragment extends Fragment {
                 .commit();
     }
 
+    // Method to handle click on a trainer item
     private void onTrainerClicked(Trainer trainer) {
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         TrainerDetailFragment detailFragment = new TrainerDetailFragment();
@@ -120,6 +125,7 @@ public class HomeFragment extends Fragment {
                 .commit();
     }
 
+    // Method to navigate to the full list of classes
     private void navigateToClassFragment() {
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         fragmentManager.beginTransaction()
@@ -131,6 +137,7 @@ public class HomeFragment extends Fragment {
         bottomNavigationView.setSelectedItemId(R.id.navigation_class);  // Set the ID corresponding to the ClassFragment
     }
 
+    // Method to navigate to the full list of trainers
     private void navigateToTrainerFragment() {
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         fragmentManager.beginTransaction()
@@ -139,9 +146,10 @@ public class HomeFragment extends Fragment {
                 .commit();
 
         BottomNavigationView bottomNavigationView = getActivity().findViewById(R.id.navigation);
-        bottomNavigationView.setSelectedItemId(R.id.navigation_trainer);  // Set the ID corresponding to the ClassFragment
+        bottomNavigationView.setSelectedItemId(R.id.navigation_trainer);  // Set the ID corresponding to the TrainerFragment
     }
 
+    // Close the Realm instance when the fragment view is destroyed
     @Override
     public void onDestroyView() {
         super.onDestroyView();

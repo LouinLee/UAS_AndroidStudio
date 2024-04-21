@@ -1,3 +1,9 @@
+/*
+ * ProfileFragment.java
+ * This fragment displays the user's profile information and their booked classes and trainers.
+ * It allows users to log out from their account.
+ */
+
 package com.example.realmapp.fragment;
 
 import android.content.Context;
@@ -26,36 +32,42 @@ import io.realm.Realm;
 
 public class ProfileFragment extends Fragment {
 
+    // UI components
     private RecyclerView bookedClassesRecyclerView, bookedTrainerRecyclerView;
     private TextView usernameTextView;
+    private Button logoutButton;
+
+    // Realm instance
     private Realm realm;
+
+    // Adapters for displaying booked classes and trainers
     private ClassAdapter classAdapter;
     private TrainerAdapter trainerAdapter;
-    private Button logoutButton;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
+        // Initialize UI components
         usernameTextView = view.findViewById(R.id.usernameTextView);
         bookedClassesRecyclerView = view.findViewById(R.id.bookedClassesRecyclerView);
         bookedTrainerRecyclerView = view.findViewById(R.id.bookedTrainerRecyclerView);
         logoutButton = view.findViewById(R.id.logoutButton);
 
+        // Set layout managers for RecyclerViews
         bookedClassesRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         bookedTrainerRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        // Initialize Realm
         realm = Realm.getDefaultInstance();
 
-        logoutButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                logoutUser();
-            }
-        });
+        // Set OnClickListener for logout button
+        logoutButton.setOnClickListener(v -> logoutUser());
 
         return view;
     }
 
+    // Method to handle user logout
     private void logoutUser() {
         // Clear SharedPreferences
         SharedPreferences prefs = getActivity().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
@@ -70,12 +82,14 @@ public class ProfileFragment extends Fragment {
         getActivity().finish();
     }
 
+    // Refresh UI when the fragment is resumed
     @Override
     public void onResume() {
         super.onResume();
         updateUI();
     }
 
+    // Method to update the UI with user's profile information and booked classes/trainers
     private void updateUI() {
         SharedPreferences prefs = getActivity().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
         String userId = prefs.getString("userId", null);
@@ -90,29 +104,27 @@ public class ProfileFragment extends Fragment {
             return;
         }
 
-        // Assuming the username is also stored in the User model in Realm
+        // Display username
         usernameTextView.setText(currentUser.getUsername());
 
-        Log.d("ProfileFragment", "User found: " + currentUser.getUsername());
+        // Display booked classes, if any
         if (currentUser.getBookedClasses() != null) {
-            Log.d("ProfileFragment", "Booked Classes: " + currentUser.getBookedClasses().size());
             classAdapter = new ClassAdapter(currentUser.getBookedClasses(), null);
             bookedClassesRecyclerView.setAdapter(classAdapter);
         } else {
-            Log.d("ProfileFragment", "No classes booked");
-            bookedClassesRecyclerView.setAdapter(null); // Clear adapter if no classes
+            bookedClassesRecyclerView.setAdapter(null); // Clear adapter if no classes booked
         }
 
+        // Display booked trainers, if any
         if (currentUser.getBookedTrainer() != null) {
-            Log.d("ProfileFragment", "Booked Trainer: " + currentUser.getBookedTrainer().size());
             trainerAdapter = new TrainerAdapter(currentUser.getBookedTrainer(), null);
             bookedTrainerRecyclerView.setAdapter(trainerAdapter);
         } else {
-            Log.d("ProfileFragment", "No trainer booked");
-            bookedTrainerRecyclerView.setAdapter(null); // Clear adapter if no classes
+            bookedTrainerRecyclerView.setAdapter(null); // Clear adapter if no trainers booked
         }
     }
 
+    // Close the Realm instance when the fragment view is destroyed
     @Override
     public void onDestroyView() {
         super.onDestroyView();

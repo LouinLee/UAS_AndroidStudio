@@ -1,3 +1,8 @@
+/*
+ * TrainerDetailFragment.java
+ * This fragment displays the details of a trainer and allows users to book the trainer for a session.
+ */
+
 package com.example.realmapp.fragment;
 
 import android.content.Context;
@@ -18,7 +23,6 @@ import androidx.fragment.app.Fragment;
 
 import com.example.realmapp.R;
 import com.example.realmapp.activity.HomeActivity;
-import com.example.realmapp.model.GymClass;
 import com.example.realmapp.model.Trainer;
 import com.example.realmapp.model.User;
 
@@ -26,7 +30,10 @@ import io.realm.Realm;
 
 public class TrainerDetailFragment extends Fragment {
 
+    // Realm instance
     private Realm realm;
+
+    // UI components
     private TextView name, description;
     private ImageView imageView;
     private Button bookButton;
@@ -50,10 +57,12 @@ public class TrainerDetailFragment extends Fragment {
         // Load trainer details
         loadTrainerDetails();
 
+        // Set OnClickListener for book button
         bookButton.setOnClickListener(this::attemptToBookTrainer);
         return view;
     }
 
+    // Method to load trainer details
     private void loadTrainerDetails() {
         String trainerId = getArguments() != null ? getArguments().getString("trainerId", "") : "";
         Trainer trainer = realm.where(Trainer.class).equalTo("id", trainerId).findFirst();
@@ -67,6 +76,7 @@ public class TrainerDetailFragment extends Fragment {
         }
     }
 
+    // Method to attempt booking of the trainer
     private void attemptToBookTrainer(View view) {
         if (getContext() == null) return;
 
@@ -79,13 +89,14 @@ public class TrainerDetailFragment extends Fragment {
             return;
         }
 
+        // Execute Realm transaction asynchronously
         realm.executeTransactionAsync(r -> {
             User user = r.where(User.class).equalTo("id", userId).findFirst();
             String trainerId = getArguments() != null ? getArguments().getString("trainerId", "") : "";
             Trainer managedTrainer = r.where(Trainer.class).equalTo("id", trainerId).findFirst();
 
             if (user != null && managedTrainer != null) {
-                // Check if the class is already booked
+                // Check if the trainer is already booked
                 if (!user.getBookedTrainer().contains(managedTrainer)) {
                     user.getBookedTrainer().add(managedTrainer);
                     if (getContext() != null) {
@@ -117,11 +128,13 @@ public class TrainerDetailFragment extends Fragment {
         }, this::onError);
     }
 
+    // Method to handle transaction errors
     private void onError(Throwable error) {
         if (getContext() == null) return;
         Toast.makeText(getContext(), "Failed to book trainer: " + error.getMessage(), Toast.LENGTH_LONG).show();
     }
 
+    // Method to navigate to HomeActivity
     private void goToHomeActivity() {
         if (getActivity() == null) return;
         Intent intent = new Intent(getActivity(), HomeActivity.class);
@@ -130,6 +143,7 @@ public class TrainerDetailFragment extends Fragment {
         getActivity().finish();
     }
 
+    // Close the Realm instance when the fragment is destroyed
     @Override
     public void onDestroy() {
         super.onDestroy();

@@ -1,3 +1,10 @@
+/*
+ * RegisterActivity.java
+ * This class represents the registration activity of the RealmApp application. It allows users to register
+ * by providing a username and password. Upon successful registration, it saves the user's ID, logs all users
+ * for debugging purposes, and navigates to the home activity.
+ */
+
 package com.example.realmapp.activity;
 
 import android.content.Intent;
@@ -34,29 +41,37 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
+        // Initialize Realm
         realm = Realm.getDefaultInstance();
 
+        // Initialize elements
         usernameEditText = findViewById(R.id.username);
         passwordEditText = findViewById(R.id.password);
         registerButton = findViewById(R.id.registerButton);
 
+        // Set click listener for register button
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // Register user when the register button is clicked
                 registerUser(usernameEditText.getText().toString(), passwordEditText.getText().toString());
             }
         });
     }
 
+    // Method to register a new user
     private void registerUser(String username, String password) {
         if (username.isEmpty() || password.isEmpty()) {
             Toast.makeText(this, "Username and password cannot be empty", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        // Execute Realm transaction asynchronously
         realm.executeTransactionAsync(realm -> {
             // Generate a unique ID for each user
             String userId = UUID.randomUUID().toString();
+
+            // Create a new User object with the generated ID
             User user = realm.createObject(User.class, userId); // use id as primary key
             user.setUsername(username);
             user.setPassword(password);
@@ -64,18 +79,24 @@ public class RegisterActivity extends AppCompatActivity {
         }, () -> {
             saveUserData(temporaryUserId); // Now use the stored userId here
             logAllUsers(); // Log all users to debug
+
+            // Navigate to the home activity
             Intent intent = new Intent(RegisterActivity.this, HomeActivity.class);
             startActivity(intent);
             finish();
         }, error -> {
+            // If transaction encounters an error
             Toast.makeText(RegisterActivity.this, "Registration failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
             error.printStackTrace();
         });
     }
 
+    // Method to log all users for debugging
     private void logAllUsers() {
         realm.executeTransactionAsync(realm -> {
+                    // Retrieve all users from Realm
                     List<User> users = realm.where(User.class).findAll();
+                    // Log each user's username and ID
                     for (User user : users) {
                         Log.d("RegisterActivity", "User: " + user.getUsername() + " ID: " + user.getId());
                     }
@@ -83,6 +104,7 @@ public class RegisterActivity extends AppCompatActivity {
                 error -> Log.e("RegisterActivity", "Error logging users: " + error.getMessage()));
     }
 
+    // Method to save user data (user ID) to SharedPreferences
     private void saveUserData(String userId) {
         SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
@@ -90,6 +112,8 @@ public class RegisterActivity extends AppCompatActivity {
         editor.apply();
         Log.d("SharedPreferences", "Saved User ID: " + userId);
     }
+
+    // Close the Realm instance when the activity is destroyed
     @Override
     protected void onDestroy() {
         super.onDestroy();

@@ -1,3 +1,8 @@
+/*
+ * Trainer.java
+ * This class represents a trainer and extends RealmObject for Realm database functionality.
+ */
+
 package com.example.realmapp.model;
 
 import io.realm.RealmObject;

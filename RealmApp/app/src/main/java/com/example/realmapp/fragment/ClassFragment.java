@@ -1,9 +1,16 @@
+/*
+ * ClassFragment.java
+ * This fragment displays a list of gym classes using a RecyclerView.
+ * It listens for changes in the Realm database and updates the RecyclerView accordingly.
+ */
+
 package com.example.realmapp.fragment;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -20,8 +27,11 @@ import io.realm.RealmResults;
 
 public class ClassFragment extends Fragment {
 
+    // RecyclerView and adapter
     private RecyclerView recyclerView;
     private ClassAdapter adapter;
+
+    // Realm instance
     private Realm realm;
 
     @Override
@@ -30,10 +40,15 @@ public class ClassFragment extends Fragment {
         recyclerView = view.findViewById(R.id.classesRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
+        // Initialize Realm
         realm = Realm.getDefaultInstance();
+
+        // Retrieve gym classes asynchronously
         RealmResults<GymClass> classes = realm.where(GymClass.class).findAllAsync();
 
+        // Initialize and set adapter for RecyclerView
         adapter = new ClassAdapter(classes, gymClass -> {
+            // Handle item click by navigating to ClassDetailFragment
             FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
             ClassDetailFragment detailFragment = new ClassDetailFragment();
             Bundle args = new Bundle();
@@ -57,6 +72,7 @@ public class ClassFragment extends Fragment {
         return view;
     }
 
+    // Close the Realm instance when the fragment view is destroyed
     @Override
     public void onDestroyView() {
         super.onDestroyView();

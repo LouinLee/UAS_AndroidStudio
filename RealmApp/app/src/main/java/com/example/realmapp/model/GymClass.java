@@ -1,3 +1,8 @@
+/*
+ * GymClass.java
+ * This class represents a gym class and extends RealmObject for Realm database functionality.
+ */
+
 package com.example.realmapp.model;
 
 import io.realm.RealmObject;
